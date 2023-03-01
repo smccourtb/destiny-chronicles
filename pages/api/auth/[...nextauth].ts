@@ -1,6 +1,6 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
-import BungieProvider from "next-auth/providers/bungie";
-import { BungieUser, User } from "../../../types/user";
+import NextAuth, { NextAuthOptions } from 'next-auth'
+import BungieProvider from 'next-auth/providers/bungie'
+import { applyBungieDomain } from '../../../utils/url-handling'
 
 export const authOptions: NextAuthOptions = {
   // Configure one or more authentication providers
@@ -9,53 +9,71 @@ export const authOptions: NextAuthOptions = {
       clientId: `${process.env.DESTINY_CLIENT_ID}`,
       clientSecret: `${process.env.DESTINY_CLIENT_SECRET}`,
       authorization: {
-        url: "https://www.bungie.net/en/OAuth/Authorize?reauth=true",
+        url: 'https://www.bungie.net/en/OAuth/Authorize?reauth=true',
         params: {
-          scope: "",
+          scope: '',
         },
       },
       httpOptions: {
         headers: {
-          "X-API-Key": process.env.DESTINY_API_KEY,
+          'X-API-Key': process.env.DESTINY_API_KEY,
         },
       },
+
       profile(profile) {
-        const { Response }: { Response: BungieUser } = profile;
-        const { displayName, profilePicturePath, membershipId } = Response;
-        const bungieUser: User = {
+        const { bungieNetUser } = profile.Response
+        const { membershipId, displayName, profilePicturePath } = bungieNetUser
+        return {
           id: membershipId,
           name: displayName,
           email: null,
-          image: `https://www.bungie.net${
-            profilePicturePath.startsWith("/") ? "" : "/"
-          }${profilePicturePath}`,
-        };
-        return bungieUser;
+          image: applyBungieDomain(profilePicturePath),
+        }
       },
 
-      userinfo: `${
-        process.env.DESTINY_API_ROOT_PATH
-      }/User/GetBungieNetUserById/${8774919}/`,
+      userinfo: {
+        url: 'https://www.bungie.net/Platform/User/GetMembershipsForCurrentUser/',
+      },
     }),
   ],
+  debug: false,
   callbacks: {
-    async signIn({ user, account, profile, email, credentials }) {
-      console.log("Siging In: ", user, account, profile, email, credentials);
-      return true;
+    async signIn({ user, account, profile }) {
+      // profile seems to be the response from the Bungie API -> GetMembershipsForCurrentUser.
+      // console.debug("Sign In: ", user, account, profile);
+      return true
     },
     async redirect({ url, baseUrl }) {
-      console.log("Redirecting to: ", url);
-      return baseUrl;
+      // console.debug("Redirecting to: ", url);
+      return baseUrl
     },
-    async session({ session, token }) {
-      console.log("Session: ", session, token);
-
-      return session;
+    async session({ session, token, user }) {
+      // console.debug("Session: ", session, token, user);
+      /*
+      when jwt is called we slice in the profile data retrieved from the Bungie API in the profile() callback in the
+      property user.
+      */
+      if (token.user) {
+        session.user = { ...session.user, ...token.user }
+      }
+      return session
     },
     async jwt({ token, user, account, profile, isNewUser }) {
-      console.log("JWT: ", token, user, account, profile, isNewUser);
-      return token;
+      // console.debug("JWT: ", token, user, account, profile, isNewUser);
+      if (profile) {
+        const { Response } = profile
+        const { bungieNetUser, destinyMemberships, primaryMembershipId } = Response
+        token = {
+          ...token,
+          user: {
+            bungieNetUser,
+            destinyMemberships,
+            primaryMembershipId,
+          },
+        }
+      }
+      return token
     },
   },
-};
-export default NextAuth(authOptions);
+}
+export default NextAuth(authOptions)
