@@ -8,7 +8,7 @@ export const metadata = {
 
 export default async function Page() {
   const session = await getServerSession(authOptions)
-
+  console.log('SESSION ON PAGE: ', session)
   // const { data, error } = await getNewsArticles(0)
   if (session) {
     const { data, error: characterError } = await getProfile(session.user.primaryMembershipId, 1, [
