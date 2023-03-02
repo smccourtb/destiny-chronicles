@@ -8,15 +8,18 @@ export const metadata = {
 
 export default async function Page() {
   const session = await getServerSession(authOptions)
+
   // const { data, error } = await getNewsArticles(0)
   if (session) {
-    const { data: profile, error: characterError } = await getProfile(session.user.primaryMembershipId, 1, [
-      destinyComponents.vendorReceipts,
-      105,
+    const { data, error: characterError } = await getProfile(session.user.primaryMembershipId, 1, [
+      destinyComponents.profileInventory,
     ])
-    profile && console.log(profile)
-    characterError && console.error(characterError as Error)
+
+    // data?.profileInventory && console.log(data.profileInventory)
+    // characterError && console.error(characterError as Error)
   }
+
+  // profile, profileProgression, characters
   return (
     <>
       {/*<Navbar*/}

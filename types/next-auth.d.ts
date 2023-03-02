@@ -1,5 +1,6 @@
 import { DefaultSession } from 'next-auth'
 import { BungieNetUser, DestinyMembership, GetMembershipsForCurrentUserResponse } from './user'
+import { JWT } from 'next-auth/jwt'
 declare module 'next-auth' {
   /**
    * Returned by `useSession`, `getSession` and received as a prop on the `SessionProvider` React Context
@@ -12,6 +13,7 @@ declare module 'next-auth' {
       destinyMemberships: DestinyMembership[]
       primaryMembershipId: string
     } & DefaultSession['user']
+    token: JWT
   }
 
   /**

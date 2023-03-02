@@ -53,8 +53,10 @@ export const authOptions: NextAuthOptions = {
       when jwt is called we slice in the profile data retrieved from the Bungie API in the profile() callback in the
       property user.
       */
-      if (token.user) {
-        session.user = { ...session.user, ...token.user }
+      if (token) {
+        const { user, ...rest } = token as any
+        session.user = { ...session.user, ...user }
+        session.token = rest
       }
       return session
     },
