@@ -36,30 +36,32 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
-  debug: false,
+  debug: true,
   callbacks: {
     async signIn({ user, account, profile }) {
       // profile seems to be the response from the Bungie API -> GetMembershipsForCurrentUser.
-      // console.debug("Sign In: ", user, account, profile);
+      console.debug('Sign In: ', user, account, profile)
       return true
     },
     async redirect({ url, baseUrl }) {
-      // console.debug("Redirecting to: ", url);
+      // console.debug('Redirect: ', url, baseUrl)
       return baseUrl
     },
     async session({ session, token, user }) {
-      // console.debug("Session: ", session, token, user);
+      console.debug('Session: ', session, token, user)
       /*
       when jwt is called we slice in the profile data retrieved from the Bungie API in the profile() callback in the
       property user.
       */
-      if (token.user) {
-        session.user = { ...session.user, ...token.user }
+      if (token) {
+        const { user, ...rest } = token as any
+        session.user = { ...session.user, ...user }
+        session.token = rest
       }
       return session
     },
     async jwt({ token, user, account, profile, isNewUser }) {
-      // console.debug("JWT: ", token, user, account, profile, isNewUser);
+      console.debug('JWT: ', token, user, account, profile, isNewUser)
       if (profile) {
         const { Response } = profile
         const { bungieNetUser, destinyMemberships, primaryMembershipId } = Response

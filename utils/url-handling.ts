@@ -30,5 +30,5 @@ export const applyBungieDomain = (path: string) => {
   // check if the path starts with a `/`
   const separator = path.startsWith('/') ? '' : '/'
   // return the path with the domain and separator
-  return `${process.env.DESTINY_API_ROOT_PATH}${separator}${path}`
+  return `https://www.bungie.net${separator}${path}`
 }

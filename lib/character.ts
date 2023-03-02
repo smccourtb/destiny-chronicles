@@ -1,70 +1,7 @@
-import { DestinyProfile } from '../types/user'
 import { BungieResponse } from './articles'
+import { ComponentResponse, ComponentResponseWrapper } from '../types/component'
 
-/**
- * @description Returns Destiny Profile information for the supplied membership.
- * @param destinyMembershipId - Destiny membership ID. We can get this from session.user.primaryMembershipId
- * @param membershipType Destiny membership type. See {@link BungieMembershipType}
- * @param components - An array of numbers. See {@link destinyComponents}
- * @example
- *  getProfile("4611686018450406185", 3, [100, 200]) => { data: [ DestinyProfile, DestinyCharacterComponent[] ], error:
- *     null }
- * @returns data related to the components requested stored in an array. If an error occurs, the error will be returned
- */
-export async function getProfile(
-  destinyMembershipId: string,
-  membershipType: number, // enum BungieMembershipType
-  components: number[]
-) {
-  try {
-    const query = components.map((component) => component).join(',')
-
-    const res = await fetch(
-      `${
-        process.env.DESTINY_API_ROOT_PATH
-      }/Platform/Destiny2/${membershipType.toString()}/Profile/${destinyMembershipId}/?components=${query}`,
-      {
-        method: 'GET',
-        headers: {
-          'X-API-Key': process.env.DESTINY_API_KEY as string,
-        },
-      }
-    )
-    if (!res.ok) {
-      return { error: { message: res.statusText }, data: null }
-    }
-
-    const searchedComponents: string[] = components.map((component) => destinyComponentMap[component])
-
-    const response: GetProfileResponse = await res.json()
-    const { Response } = response
-
-    const data = searchedComponents.map((key) => {
-      const searchedData = Response[key].data
-      if (!searchedData) {
-        const privacy = Response[key].privacy
-        throw Error(
-          `No data property found, check to make sure what you are searching for has the data property at the top level ${
-            privacy > 1 && 'This is most likely because the users privacy setting is not public'
-          }`
-        )
-      }
-      return searchedData
-    })
-    return { data, error: null }
-  } catch (error) {
-    return { error, data: null }
-  }
-}
-
-export type DestinyComponents = {
-  [key: string]: number
-}
-
-/**
- * @namespace DestinyComponents
- */
-export const destinyComponents: DestinyComponents = {
+export const destinyComponents = {
   /**
    * @description profile is the most basic component, only relevant when calling GetProfile. This returns basic
    *     information about the profile, which is almost nothing: a list of characterIds, some information about
@@ -72,15 +9,28 @@ export const destinyComponents: DestinyComponents = {
    */
   profile: 100,
   vendorReceipts: 101,
-  profileInventories: 102,
+  /**
+   * @description profileInventory is the set of items on your profile (not on your characters). Items in inventory tab
+   *     in-game, and the vault
+   */
+  profileInventory: 102,
   profileCurrencies: 103,
   profileProgression: 104,
   platformSilver: 105,
   characters: 200,
+  /** @description characterInventories is the set of items on your character(s) */
   characterInventories: 201,
   characterProgressions: 202,
+  /**
+   * @description characterRenderData is a set of cosmetic information that we use to render your character in 3D. THe
+   *     property peerView holds the characters **equipped** inventory
+   */
   characterRenderData: 203,
   characterActivities: 204,
+  /**
+   * @description characterEquipment is the set of items on your character(s) that are equipped. Better than from
+   *     {@link characterRenderData}
+   */
   characterEquipment: 205,
   itemInstances: 300,
   itemObjectives: 301,
@@ -107,14 +57,10 @@ export const destinyComponents: DestinyComponents = {
   craftables: 1300,
 }
 
-export type DestinyComponentMap = {
-  [key: number]: string
-}
-
-export const destinyComponentMap: DestinyComponentMap = {
+export const destinyComponentMap: { [key: number | string]: string } = {
   100: 'profile',
   101: 'vendorReceipts',
-  102: 'profileInventories',
+  102: 'profileInventory',
   103: 'profileCurrencies',
   104: 'profileProgression',
   105: 'platformSilver',
@@ -150,57 +96,63 @@ export const destinyComponentMap: DestinyComponentMap = {
 }
 
 /**
- * @namespace ItemQuantity
- * @description Used in a number of Destiny contracts to return data about an item stack and its quantity. Can
- *     optionally return an itemInstanceId if the item is instanced - in which case, the quantity returned will be 1.
- *     If it's not... uh, let me know okay? Thanks.
+ * @description Returns Destiny Profile information for the supplied membership. the components can tailor the response
+ *     type
+ * @param destinyMembershipId - Destiny membership ID. We can get this from session.user.primaryMembershipId
+ * @param membershipType Destiny membership type. See {@link BungieMembershipType}
+ * @param components - An array of numbers. See {@link destinyComponents}
+ * @example
+ *  getProfile("4611686018450406185", 3, [100, 200]) => { data: [ DestinyProfile, DestinyCharacterComponent[] ], error:
+ *     null }
+ * @returns data related to the components requested stored in an array. If an error occurs, the error will be returned
  */
-export type ItemQuantity = {
-  itemHash: number
-  itemInstanceId: number
-  quantity: number
-  hasConditionalVisibility: boolean
+export async function getProfile(
+  destinyMembershipId: string | number,
+  membershipType: string | number, // enum BungieMembershipType
+  components: string[] | number[]
+): Promise<InternalFetchResponse<ComponentResponse>> {
+  const query = components.map((component) => component).join(',')
+  const res = await fetch(
+    `https://www.bungie.net/Platform/Destiny2/${membershipType.toString()}/Profile/${destinyMembershipId}/?components=${query}`,
+    {
+      method: 'GET',
+      headers: {
+        'X-API-Key': process.env.DESTINY_API_KEY as string,
+      },
+    }
+  )
+  if (!res.ok) {
+    return { error: new Error(res.statusText), data: null }
+  }
+
+  const response: GetProfileApiResponse = await res.json()
+  const { Response } = response
+
+  // convert the components to the correct string so we can access the response data. It's nested as the property name
+  const convertedProperties: string[] = components.map((component) => destinyComponentMap[component])
+
+  const data = {}
+  convertedProperties.forEach((key) => {
+    const searchedData = Response[key]?.data
+    if (!searchedData) {
+      console.warn(`No data property found Response.${key}, returning data from Response instead`)
+      Object.assign(data, { [key]: Response[key] })
+    } else {
+      Object.assign(data, { [key]: searchedData })
+    }
+  })
+  // check that length of data is equal to length of components
+  if (Object.keys(data).length > 0) {
+    return { data, error: null } as { data: ComponentResponse; error: null }
+  } else {
+    return { data: null, error: new Error('No data found') }
+  }
 }
 
-/**
- * @namespace VendorReceipt
- * @description If a character purchased an item that is refundable, a Vendor Receipt will be created on the user's
- *     Destiny Profile. These expire after a configurable period of time, but until then can be used to get refunds on
- *     items. BNet does not provide the ability to refund a purchase *yet*, but you know.
- */
-export type VendorReceipt = {
-  currencyPaid: ItemQuantity[]
-  itemReceived: ItemQuantity
-  licenseUnlockHash: number
-  purchasedByCharacterId: number
-  refundPolicy: number
-  sequenceNumber: number
-  timeToExpiration: number
-  expiresOn: string
-}
-export type VendorReceipts = { receipts: VendorReceipt[] }
-
-/**
- * @see {@link VendorReceipt}
- */
-export type VendorReceiptsWrapper = {
-  data: VendorReceipts
-  privacy: number
-  disabled: boolean | null
+type GetProfileResponse = {
+  [key: string]: ComponentResponseWrapper
 }
 
-export type BungieResponseWrapper<T> = {
-  data: T
-  privacy: number
-  disabled: boolean | null
-}
+type GetProfileApiResponse = BungieResponse<GetProfileResponse>
 
-export type GetProfile = {
-  [key: string]: any
-  profile?: BungieResponseWrapper<DestinyProfile>
-  vendorReceipts?: VendorReceiptsWrapper
-}
-
-type GetProfileResponse = BungieResponse<GetProfile>
-
-export type InternalFetchResponse<T> = { data: T | null; error: Error | null }
+export type InternalFetchResponse<T> = { data: ComponentResponse | null; error: Error | null }
