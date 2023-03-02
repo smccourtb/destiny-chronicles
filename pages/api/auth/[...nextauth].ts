@@ -43,10 +43,8 @@ export const authOptions: NextAuthOptions = {
       // console.debug("Sign In: ", user, account, profile);
       return true
     },
-    async redirect({ url, baseUrl }) {
-      // console.debug("Redirecting to: ", url);
-      return baseUrl
-    },
+    // async redirect({ url, baseUrl }) {
+    // },
     async session({ session, token, user }) {
       // console.debug("Session: ", session, token, user);
       /*
