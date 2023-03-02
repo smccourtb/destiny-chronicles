@@ -1,5 +1,5 @@
 import { DefaultSession } from 'next-auth'
-import { BungieNetUser, DestinyMembership, GetMembershipsForCurrentUserResponse } from './user'
+import { BungieNetUser, DestinyMembership, UserMemberships } from './user'
 import { JWT } from 'next-auth/jwt'
 declare module 'next-auth' {
   /**
@@ -30,6 +30,6 @@ declare module 'next-auth' {
 
   /** The OAuth profile returned from your provider */
   interface Profile {
-    Response: GetMembershipsForCurrentUserResponse
+    Response: UserMemberships
   }
 }

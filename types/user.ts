@@ -241,4 +241,4 @@ export type UserMemberships = {
   primaryMembershipId: string
 }
 
-export type GetMembershipsForCurrentUserResponse = UserMemberships & BungieResponse
+export type GetMembershipsForCurrentUserResponse = BungieResponse<UserMemberships>
