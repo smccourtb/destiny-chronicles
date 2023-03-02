@@ -36,7 +36,7 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
-  debug: false,
+  debug: true,
   callbacks: {
     async signIn({ user, account, profile }) {
       // profile seems to be the response from the Bungie API -> GetMembershipsForCurrentUser.
@@ -44,7 +44,7 @@ export const authOptions: NextAuthOptions = {
       return true
     },
     async redirect({ url, baseUrl }) {
-      console.debug('Redirect: ', url, baseUrl)
+      // console.debug('Redirect: ', url, baseUrl)
       return baseUrl
     },
     async session({ session, token, user }) {
