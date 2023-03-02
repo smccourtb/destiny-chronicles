@@ -25,7 +25,7 @@ export type NewsArticleResponse = {
 }
 
 export async function getNewsArticles(pageNumber = 0) {
-  const res = await fetch(`${process.env.DESTINY_API_ROOT_PATH}/Content/Rss/NewsArticles/${pageNumber.toString()}/`, {
+  const res = await fetch(`https://www.bungie.net/Content/Rss/NewsArticles/${pageNumber.toString()}/`, {
     method: 'GET',
     headers: {
       'X-API-Key': process.env.DESTINY_API_KEY as string,

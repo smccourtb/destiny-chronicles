@@ -113,9 +113,7 @@ export async function getProfile(
 ): Promise<InternalFetchResponse<ComponentResponse>> {
   const query = components.map((component) => component).join(',')
   const res = await fetch(
-    `${
-      process.env.DESTINY_API_ROOT_PATH
-    }/Platform/Destiny2/${membershipType.toString()}/Profile/${destinyMembershipId}/?components=${query}`,
+    `https://www.bungie.net/Platform/Destiny2/${membershipType.toString()}/Profile/${destinyMembershipId}/?components=${query}`,
     {
       method: 'GET',
       headers: {
