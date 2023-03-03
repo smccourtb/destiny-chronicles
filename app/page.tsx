@@ -2,21 +2,22 @@ import { authOptions } from '../pages/api/auth/[...nextauth]'
 import { getServerSession } from 'next-auth/next'
 import { SignInButton } from '../components/buttons/SignInButton'
 import { destinyComponents, getProfile } from '../lib/character'
+import { log, logError, setDebug } from '../logger/logger'
 export const metadata = {
   title: 'The Destiny Chronicles',
 }
-
+setDebug(false)
 export default async function Page() {
   const session = await getServerSession(authOptions)
-  console.log('SESSION ON PAGE: ', session)
+  log('SESSION ON PAGE: ', session)
   // const { data, error } = await getNewsArticles(0)
   if (session) {
     const { data, error: characterError } = await getProfile(session.user.primaryMembershipId, 1, [
       destinyComponents.profileInventory,
     ])
 
-    // data?.profileInventory && console.log(data.profileInventory)
-    // characterError && console.error(characterError as Error)
+    data && log(data.profileInventory)
+    characterError && logError(characterError as Error)
   }
 
   // profile, profileProgression, characters
