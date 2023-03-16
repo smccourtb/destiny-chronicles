@@ -4,7 +4,7 @@ let debug = false
  * @description master flag to turn off logging to console
  * @param value
  */
-export const setDebug = (value: boolean) => {
+export const setDebug = (value: boolean, p: { debug: boolean; log: boolean; error: boolean; info: boolean }) => {
   debug = process.env.DEBUG === 'true' || value
 }
 

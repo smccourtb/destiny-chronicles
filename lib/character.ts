@@ -1,5 +1,6 @@
 import { BungieResponse } from './articles'
 import { ComponentResponse, ComponentResponseWrapper } from '../types/component'
+import { logError, logInfo } from '../logger/logger'
 
 export const destinyComponents = {
   /**
@@ -102,15 +103,15 @@ export const destinyComponentMap: { [key: number | string]: string } = {
  * @param membershipType Destiny membership type. See {@link BungieMembershipType}
  * @param components - An array of numbers. See {@link destinyComponents}
  * @example
- *  getProfile("4611686018450406185", 3, [100, 200]) => { data: [ DestinyProfile, DestinyCharacterComponent[] ], error:
+ *  getProfile("4611686018450406185", 3, [100, 200]) => { json: [ DestinyProfile, DestinyCharacterComponent[] ], error:
  *     null }
- * @returns data related to the components requested stored in an array. If an error occurs, the error will be returned
+ * @returns json related to the components requested stored in an array. If an error occurs, the error will be returned
  */
 export async function getProfile(
   destinyMembershipId: string | number,
   membershipType: string | number, // enum BungieMembershipType
   components: string[] | number[]
-): Promise<InternalFetchResponse<ComponentResponse>> {
+) {
   const query = components.map((component) => component).join(',')
   const res = await fetch(
     `https://www.bungie.net/Platform/Destiny2/${membershipType.toString()}/Profile/${destinyMembershipId}/?components=${query}`,
@@ -128,7 +129,7 @@ export async function getProfile(
   const response: GetProfileApiResponse = await res.json()
   const { Response } = response
 
-  // convert the components to the correct string so we can access the response data. It's nested as the property name
+  // convert the components to the correct string, so we can access the response json. It's nested as the property name
   const convertedProperties: string[] = components.map((component) => destinyComponentMap[component])
 
   const data = {}
@@ -141,7 +142,7 @@ export async function getProfile(
       Object.assign(data, { [key]: searchedData })
     }
   })
-  // check that length of data is equal to length of components
+  // check that length of json is equal to length of components
   if (Object.keys(data).length > 0) {
     return { data, error: null } as { data: ComponentResponse; error: null }
   } else {
@@ -149,10 +150,50 @@ export async function getProfile(
   }
 }
 
+export const getEmblemBackground = async (itemHash: string | number) => {
+  const response = await fetch(
+    `https://bungie.net/Platform/Destiny2/Manifest/DestinyInventoryItemDefinition/${itemHash}/`,
+    {
+      method: 'GET',
+      headers: {
+        'X-API-Key': process.env.DESTINY_API_KEY as string,
+      },
+    }
+  )
+  if (response.ok) {
+    const data = await response.json()
+    const { Response } = data
+    const { secondarySpecial, secondaryOverlay } = Response
+    return { data: { secondarySpecial, secondaryOverlay }, error: null }
+  } else {
+    return { data: null, error: new Error(response.statusText) }
+  }
+}
+
+export const getSeasonData = async (seasonHash: string | number) => {
+  const response = await fetch(
+    `https://www.bungie.net/Platform/Destiny2/Manifest/DestinySeasonDefinition/${seasonHash}/`,
+    {
+      method: 'GET',
+      headers: {
+        'X-API-Key': process.env.DESTINY_API_KEY as string,
+      },
+    }
+  )
+  if (response.ok) {
+    logInfo('Season data fetched successfully')
+    const data = await response.json()
+    console.log(data)
+    const { Response } = data
+    const { displayProperties, seasonNumber } = Response
+    return { data: { seasonIcon: displayProperties.icon, seasonNumber }, error: null }
+  } else {
+    logError('Error fetching season data')
+    return { data: null, error: new Error(response.statusText) }
+  }
+}
 type GetProfileResponse = {
   [key: string]: ComponentResponseWrapper
 }
 
 type GetProfileApiResponse = BungieResponse<GetProfileResponse>
-
-export type InternalFetchResponse<T> = { data: ComponentResponse | null; error: Error | null }

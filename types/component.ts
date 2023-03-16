@@ -2,7 +2,7 @@ import { DestinyProfile } from './user'
 import { VendorReceipts } from './vendor'
 
 export type ComponentResponse = {
-  [key in ComponentTitle]: ComponentData
+  [key in DestinyComponentNumber]: ComponentData
 }
 
 export type ComponentResponseWrapper = {
@@ -13,76 +13,40 @@ export type ComponentResponseWrapper = {
 
 export type ComponentData = DestinyProfile | VendorReceipts
 
-export type ComponentTitle =
-  | 'profile'
-  | 'vendorReceipts'
-  | 'profileInventory'
-  | 'profileCurrencies'
-  | 'profileProgression'
-  | 'platformSilver'
-  | 'characters'
-  | 'characterInventories'
-  | 'characterProgressions'
-  | 'characterRenderData'
-  | 'characterActivities'
-  | 'characterEquipment'
-  | 'itemInstances'
-  | 'itemObjectives'
-  | 'itemPerks'
-  | 'itemRenderData'
-  | 'itemStats'
-  | 'itemSockets'
-  | 'itemTalentGrids'
-  | 'itemCommonData'
-  | 'itemPlugStates'
-  | 'itemPlugObjectives'
-  | 'itemReusablePlugs'
-  | 'vendors'
-  | 'vendorCategories'
-  | 'vendorSales'
-  | 'kiosks'
-  | 'currencyLookups'
-  | 'presentationNodes'
-  | 'collectibles'
-  | 'records'
-  | 'transitory'
-  | 'metrics'
-  | 'stringVariables'
-  | 'craftables'
-
-export type DestinyComponentNumber =
-  | 100
-  | 101
-  | 102
-  | 103
-  | 104
-  | 105
-  | 200
-  | 201
-  | 202
-  | 203
-  | 204
-  | 205
-  | 300
-  | 301
-  | 302
-  | 303
-  | 304
-  | 305
-  | 306
-  | 307
-  | 308
-  | 309
-  | 310
-  | 400
-  | 401
-  | 402
-  | 500
-  | 600
-  | 700
-  | 800
-  | 900
-  | 1000
-  | 1100
-  | 1200
-  | 1300
+export enum DestinyComponentNumber {
+  profile = 100,
+  vendorReceipts = 101,
+  profileInventory = 102,
+  profileCurrencies = 103,
+  profileProgression = 104,
+  platformSilver = 105,
+  characters = 200,
+  characterInventories = 201,
+  characterProgressions = 202,
+  characterRenderData = 203,
+  characterActivities = 204,
+  characterEquipment = 205,
+  itemInstances = 300,
+  itemObjectives = 301,
+  itemPerks = 302,
+  itemRenderData = 303,
+  itemStats = 304,
+  itemSockets = 305,
+  itemTalentGrids = 306,
+  itemCommonData = 307,
+  itemPlugStates = 308,
+  itemPlugObjectives = 309,
+  itemReusablePlugs = 310,
+  vendors = 400,
+  vendorCategories = 401,
+  vendorSales = 402,
+  kiosks = 500,
+  currencyLookups = 600,
+  presentationNodes = 700,
+  collectibles = 800,
+  records = 900,
+  transitory = 1000,
+  metrics = 1100,
+  stringVariables = 1200,
+  craftables = 1300,
+}
