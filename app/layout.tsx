@@ -18,7 +18,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <nav className="justify-end w-full text-white group flex gap-10 items-center mr-10">
             {navBarTitles.map((title) => (
               <Link
-                key="title"
+                key={title}
                 href={`/${title.toLowerCase()}`}
                 className={'uppercase tracking-wider hover-underline-animation font-display font-[400]'}
               >

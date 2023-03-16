@@ -56,7 +56,7 @@ export async function Navbar({
       <>
         <nav className="text-white group flex gap-10 items-center ml-72">
           {navBarTitles.map((title) => (
-            <Link key="title" href={'/'} className={'uppercase text-2xl tracking-wider hover-underline-animation'}>
+            <Link key={title} href={'/'} className={'uppercase text-2xl tracking-wider hover-underline-animation'}>
               {title}
             </Link>
           ))}
