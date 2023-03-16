@@ -1,6 +1,10 @@
 import { BungieResponse } from './articles'
 import type { DestinyPublicMilestone } from '../types/milestone'
-import { getDestinyActivity, getDestinyActivityModifier, getDestinyInventoryItem } from './data'
+import {
+  DestinyActivityDefinitionTable,
+  DestinyActivityModifierDefinitionTable,
+  DestinyInventoryItemDefinitionTable,
+} from '../database.config'
 
 export type GetMilestoneResponse = {
   [key: string]: DestinyPublicMilestone
@@ -42,50 +46,6 @@ export const getWeeklyMilestones = async () => {
   return { data: weeklyMilestones, error: null }
 }
 
-export const getFormattedWeeklyMilestones = async () => {
-  const weeklyMilestonesResponse = await getWeeklyMilestones()
-  if (weeklyMilestonesResponse.error || !weeklyMilestonesResponse.data) {
-    return { data: null, error: weeklyMilestonesResponse.error || new Error('No weekly milestones found') }
-  }
-  const { data } = weeklyMilestonesResponse
-  const formattedWeeklyMilestones = await Promise.all(
-    data.map(async (milestone) => {
-      const { milestoneHash, activities } = milestone
-      if (!activities) return { milestoneHash, activities: [] }
-      const activityHashes = activities.map((activity) => activity.activityHash)
-      const activityDefinitions = await getDestinyActivity(activityHashes || [])
-      const formattedActivities = activityDefinitions.map(async (activity) => {
-        const { displayProperties, pgcrImage, rewards, modifiers } = activity
-
-        const modifierHashes = modifiers.map(
-          (modifier: { activityModifierHash: number }) => modifier.activityModifierHash
-        )
-
-        const modifierDefinitions = await getDestinyActivityModifier(modifierHashes)
-
-        const formattedModifiers = modifierDefinitions.map((modifier) => {
-          const { displayProperties } = modifier
-          return { displayProperties }
-        })
-
-        const rewardHashes = rewards.length > 0 && rewards[0].rewardItems.map((rewardItem) => rewardItem.itemHash)
-        const rewardDefinitions = await getDestinyInventoryItem(rewardHashes || [])
-        const formattedRewards = rewardDefinitions.map((reward) => {
-          return { ...reward }
-        })
-        return {
-          displayProperties,
-          pgcrImage,
-          rewards: formattedRewards,
-          modifiers: formattedModifiers,
-        }
-      })
-      return { milestoneHash, activities: formattedActivities }
-    })
-  )
-  return { data: formattedWeeklyMilestones, error: null }
-}
-
 export const getWeeklyNightfall = async () => {
   /**
    * @remark Vanguard Ops is usually the first element. Nightfall:Hero is the second.
@@ -105,46 +65,55 @@ export const getWeeklyNightfall = async () => {
   if (!activities) {
     return { data: null, error: new Error('No activities found') }
   }
-  const activityHashes = activities.map((activity) => activity.activityHash)
-  const nightfallActivities = await getDestinyActivity(activityHashes)
-  const formattedNightfalls = nightfallActivities.map(async (nightfallActivity) => {
-    const { hash, displayProperties, pgcrImage, rewards, modifiers } = nightfallActivity
-    const modifierHashes = modifiers.map((modifier: { activityModifierHash: number }) => modifier.activityModifierHash)
-    const modifierDefinitions = await getDestinyActivityModifier(modifierHashes)
-    const formattedModifiers = modifierDefinitions
-      .map((modifier) => {
-        const { displayProperties, hash } = modifier
-        return {
-          name: displayProperties.name,
-          description: displayProperties.description,
-          icon: displayProperties?.icon || '',
-          hash,
-        }
-      })
-      .filter((modifier) => modifier.name)
 
-    const rewardItemHashes = rewards.length > 0 && rewards[0].rewardItems.map((rewardItem) => rewardItem.itemHash)
-    const rewardItems = rewardItemHashes ? await getDestinyInventoryItem(rewardItemHashes) : []
-    const formattedRewardItems = rewardItems
-      ? rewardItems.map((rewardItem) => {
-          const { displayProperties, hash } = rewardItem
+  const activityHashes = activities.map((activity) => activity.activityHash.toString())
+  const nightfallActivities = await DestinyActivityDefinitionTable.bulkGet(activityHashes)
+  const formattedNightfalls = await Promise.all(
+    nightfallActivities.map(async (nightfallActivity) => {
+      const { hash, displayProperties, pgcrImage, rewards, modifiers } = nightfallActivity
+      const modifierHashes = modifiers.map((modifier: { activityModifierHash: number }) =>
+        modifier.activityModifierHash.toString()
+      )
+      const modifierDefinitions = await DestinyActivityModifierDefinitionTable.bulkGet(modifierHashes)
+      const formattedModifiers = modifierDefinitions
+        .map((modifier) => {
+          const { displayProperties, hash } = modifier
           return {
             name: displayProperties.name,
+            description: displayProperties.description,
             icon: displayProperties?.icon || '',
             hash,
           }
         })
-      : []
+        .filter((modifier) => modifier.name)
 
-    return {
-      hash,
-      image: pgcrImage,
-      name: displayProperties.name,
-      description: displayProperties.description,
-      icon: displayProperties?.icon,
-      modifiers: formattedModifiers,
-      rewards: formattedRewardItems,
-    }
-  })
+      const rewardItemHashes =
+        rewards.length > 0 &&
+        rewards[0].rewardItems.map((rewardItem: { itemHash: number }) => rewardItem.itemHash.toString())
+      const rewardItems = rewardItemHashes ? await DestinyInventoryItemDefinitionTable.bulkGet(rewardItemHashes) : []
+      const formattedRewardItems = await Promise.all(
+        rewardItems
+          ? rewardItems.map((rewardItem) => {
+              const { displayProperties, hash } = rewardItem
+              return {
+                name: displayProperties.name,
+                icon: displayProperties?.icon || '',
+                hash,
+              }
+            })
+          : []
+      )
+
+      return {
+        hash,
+        image: pgcrImage,
+        name: displayProperties.name,
+        description: displayProperties.description,
+        icon: displayProperties?.icon,
+        modifiers: formattedModifiers,
+        rewards: formattedRewardItems,
+      }
+    })
+  )
   return { data: formattedNightfalls, error: null }
 }
