@@ -183,7 +183,6 @@ export const getSeasonData = async (seasonHash: string | number) => {
   if (response.ok) {
     logInfo('Season data fetched successfully')
     const data = await response.json()
-    console.log(data)
     const { Response } = data
     const { displayProperties, seasonNumber } = Response
     return { data: { seasonIcon: displayProperties.icon, seasonNumber }, error: null }

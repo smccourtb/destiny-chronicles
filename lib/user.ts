@@ -32,6 +32,5 @@ export const getMembershipDataForCurrentUser = async () => {
   })
   if (response.ok) {
     const { Response }: BungieResponse<UserMembershipData> = await response.json()
-    console.log(Response)
   }
 }
