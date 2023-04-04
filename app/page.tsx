@@ -1,5 +1,6 @@
 import React from 'react'
 import Manifest from '../components/Manifest'
+import WeeklyNightfall from '../components/WeeklyNightfall'
 const dayjs = require('dayjs')
 const relativeTime = require('dayjs/plugin/relativeTime')
 dayjs.extend(relativeTime)
@@ -9,9 +10,5 @@ export const metadata = {
 }
 
 export default async function Page() {
-  return (
-    <section className="relative mx-10 ">
-      <Manifest />
-    </section>
-  )
+  return <section className="relative mx-10 "></section>
 }

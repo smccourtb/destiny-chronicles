@@ -1,6 +1,5 @@
 import { BungieResponse } from './articles'
 import { ComponentResponse, ComponentResponseWrapper } from '../types/component'
-import { logError, logInfo } from '../logger/logger'
 
 export const destinyComponents = {
   /**
@@ -181,13 +180,11 @@ export const getSeasonData = async (seasonHash: string | number) => {
     }
   )
   if (response.ok) {
-    logInfo('Season data fetched successfully')
     const data = await response.json()
     const { Response } = data
     const { displayProperties, seasonNumber } = Response
     return { data: { seasonIcon: displayProperties.icon, seasonNumber }, error: null }
   } else {
-    logError('Error fetching season data')
     return { data: null, error: new Error(response.statusText) }
   }
 }

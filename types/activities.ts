@@ -1,11 +1,3 @@
-export type DestinyActivityDefinitionJSON = {
-  [key: string]: DestinyActivityDefinition
-}
-
-export type DestinyActivityModifierDefinitionJSON = {
-  [key: string]: DestinyActivityModifierDefinition
-}
-
 export type DestinyActivityDefinition = {
   displayProperties: {
     description: string
@@ -33,7 +25,7 @@ export type DestinyActivityDefinition = {
   placeHash: number
   activityTypeHash: number
   tier: number
-  pgcrImage: number
+  pgcrImage: string
   rewards: [
     {
       rewardItems: [

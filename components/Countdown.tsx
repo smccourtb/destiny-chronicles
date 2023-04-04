@@ -94,6 +94,7 @@ const formatDisplay = (time: TimeToReturn, options: FormatDisplayOptions) => {
 
 const Countdown = ({ timestamp, options }: CountdownProps) => {
   const [time, setTime] = useState(timeTo(timestamp))
+
   // options is conditional, so we spread defaultOptions and overwrite with options if it exists
   const settings = { ...defaultOptions, ...options }
 

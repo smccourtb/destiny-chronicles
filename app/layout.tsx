@@ -1,16 +1,15 @@
 import React from 'react'
 import '../styles/globals.css'
-import { setDebug } from '../logger/logger'
 import Link from 'next/link'
 import { SignInButton } from '../components/buttons/SignInButton'
 import { authOptions } from '../pages/api/auth/[...nextauth]'
 import { getServerSession } from 'next-auth/next'
-
-setDebug(true, { log: false, error: true, info: true, debug: false })
+import Manifest from '../components/Manifest'
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions)
-  const navBarTitles = ['Character', 'News']
+
+  const navBarTitles = ['Character', 'News', 'Weeklies']
   return (
     <html lang="en">
       <body className={`bg-background-dark text-white`}>
@@ -28,6 +27,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </nav>
           <SignInButton isSignedIn={!!session} />
         </header>
+        <Manifest />
         {children}
       </body>
     </html>

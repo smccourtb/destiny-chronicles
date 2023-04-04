@@ -1,4 +1,4 @@
-import { DestinyActivityDefinition } from '../../types/activities'
+import { DestinyActivityDefinition } from '../types/activities'
 
 export const definitions = {
   DestinyActivityDefinition: 'activityHash',

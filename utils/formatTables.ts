@@ -86,35 +86,41 @@ import { IndexableType, Table } from 'dexie'
 const { applyBungieDomain } = require('./url-handling')
 
 export async function getDestinyManifest() {
-  const manifestResponse = await fetch(applyBungieDomain('/Platform/Destiny2/Manifest/'), {
-    method: 'GET',
-  })
-  if (manifestResponse.ok) {
-    console.log('first manifest response is okay')
-    const manifest = await manifestResponse.json()
-    const { version, jsonWorldContentPaths } = manifest.Response
-    const currentManifestVersion = localStorage.getItem('manifestVersion')
-    if (currentManifestVersion === version) {
-      console.log('manifest is up to date')
-      return { error: null, data: null }
-    }
-    localStorage.setItem('manifestVersion', version)
-    const mobileWorldContentPath = jsonWorldContentPaths.en
-    const manifestUrl = applyBungieDomain(mobileWorldContentPath)
-    const manifestUrlResponse = await fetch(manifestUrl, {
+  try {
+    const manifestResponse = await fetch(applyBungieDomain('/Platform/Destiny2/Manifest/'), {
       method: 'GET',
     })
-    if (manifestUrlResponse.ok) {
-      console.log('second manifest is okay, start parsing')
-      const manifestFile = await manifestUrlResponse.json()
-      const manifest: [string, IndexableType][] = Object.entries(manifestFile)
-      console.log('parsing complete sending data over to database')
-      return { data: manifest, error: null }
+
+    if (manifestResponse.ok) {
+      console.log('first manifest response is okay')
+      const manifest = await manifestResponse.json()
+      const { version, jsonWorldContentPaths } = manifest.Response
+      const currentManifestVersion = localStorage.getItem('manifestVersion')
+      if (currentManifestVersion === version) {
+        console.log('manifest is up to date')
+        return { error: null, data: null }
+      }
+      localStorage.setItem('manifestVersion', version)
+      const mobileWorldContentPath = jsonWorldContentPaths.en
+      const manifestUrl = applyBungieDomain(mobileWorldContentPath)
+      const manifestUrlResponse = await fetch(manifestUrl, {
+        method: 'GET',
+      })
+      if (manifestUrlResponse.ok) {
+        console.log('second manifest is okay, start parsing')
+        const manifestFile = await manifestUrlResponse.json()
+        const manifest: [string, IndexableType][] = Object.entries(manifestFile)
+        console.log('parsing complete sending data over to database')
+        return { data: manifest, error: null }
+      } else {
+        return { error: new Error(manifestUrlResponse.statusText), data: null }
+      }
     } else {
-      return { error: new Error(manifestUrlResponse.statusText), data: null }
+      return { error: new Error(manifestResponse.statusText), data: null }
     }
-  } else {
-    return { error: new Error(manifestResponse.statusText), data: null }
+  } catch (e) {
+    console.log('error: ', e)
+    return { error: e, data: null }
   }
 }
 
