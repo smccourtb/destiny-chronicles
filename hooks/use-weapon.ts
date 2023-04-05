@@ -1,9 +1,8 @@
 import React, { useCallback, useState } from 'react'
-import { getWeapon } from '../lib/items'
-import { DestinyInventoryItemDefinition } from '../types'
+import { getWeapon, WeaponData } from '../lib/items'
 
 const useWeapon = (hash: number | string) => {
-  const [data, setData] = useState<DestinyInventoryItemDefinition | null>()
+  const [data, setData] = useState<WeaponData | null>()
   const [error, setError] = useState<Error | null>()
   const [loading, setLoading] = useState<boolean>(false)
 

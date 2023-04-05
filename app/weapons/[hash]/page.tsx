@@ -1,8 +1,9 @@
-import useWeapon from '../../../hooks/use-weapon'
 import Weapon from '../../../components/Weapon'
 
+export const metadata = {
+  title: `The Destiny Chronicles`,
+}
 export default async function Page({ params }: { params: { hash: string } }) {
-  // royal executioner = 1720503118
   return (
     <section>
       <Weapon hash={params.hash} />
