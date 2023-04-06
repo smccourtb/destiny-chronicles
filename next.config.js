@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false,
   swcMinify: true,
   experimental: {
     appDir: true,
@@ -9,19 +9,19 @@ const nextConfig = {
     // for images from getNewsArticles()
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "images.contentstack.io",
-        port: "",
-        pathname: "/v3/assets/**",
+        protocol: 'https',
+        hostname: 'images.contentstack.io',
+        port: '',
+        pathname: '/v3/assets/**',
       },
       {
-        protocol: "https",
-        hostname: "www.bungie.net",
-        port: "",
-        pathname: "/**",
+        protocol: 'https',
+        hostname: 'www.bungie.net',
+        port: '',
+        pathname: '/**',
       },
     ],
   },
-};
+}
 
-module.exports = nextConfig;
+module.exports = nextConfig

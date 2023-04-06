@@ -1,11 +1,9 @@
-import { BungieResponse } from '../lib/articles'
+import { GroupUserInfoCard } from './groups'
 
-/**
- * @namespace BungieNetUser
- */
-export type BungieNetUser = {
+export type GeneralUser = {
   membershipId: number
   uniqueName: string
+  normalizedName: string
   displayName: string
   profilePicture: number
   profileTheme: number
@@ -15,90 +13,38 @@ export type BungieNetUser = {
   about: string
   firstAccess: string
   lastUpdate: string
-  context: {
-    isFollowing: boolean
-    ignoreStatus: { isIgnored: boolean; ignoreFlags: number }
-    globalIgnoreEndDate: string | null
-  }
+  legacyPortalUID?: number
+  context: UserToUserContext
   xboxDisplayName: string
   psnDisplayName: string
-  showActivity: boolean
+  fbDisplayName: string
+  showActivity?: boolean
   locale: string
   localeInheritDefault: boolean
+  lastBanReportId?: number
   showGroupMessaging: boolean
   profilePicturePath: string
+  profilePictureWidePath: string
   profileThemeName: string
   userTitleDisplay: string
   statusText: string
   statusDate: string
+  profileBanExpire?: string
+  blizzardDisplayName: string
   steamDisplayName: string
+  stadiaDisplayName: string
+  twitchDisplayName: string
   cachedBungieGlobalDisplayName: string
   cachedBungieGlobalDisplayNameCode: number
+  egsDisplayName: string
 }
-
-export enum BungieMembershipType {
-  'TigerXbox' = 1,
-  'TigerPsn' = 2,
-  'TigerSteam' = 3,
-}
-
-/**
- * @namespace DestinyMembership
- * @property {string} LastSeenDisplayName - **This will be the display name the clan server last saw the user as. If
- *     the account is an active cross save override, this will be the display name to use. Otherwise, this will match
- *     the displayName property.**
- * @property {number} LastSeenDisplayNameType - **The platform of the LastSeenDisplayName.**
- * @see {@link DestinyUserInfo}
- */
-export interface DestinyMembership extends DestinyUser {
-  /**
-   * @description This will be the display name the clan server last saw the user as. If
-   *     the account is an active cross save override, this will be the display name to use. Otherwise, this will
-   *     match the displayName property.
-   */
-  LastSeenDisplayName: string
-  /**
-   * @description The platform of the LastSeenDisplayName.
-   */
-  LastSeenDisplayNameType: number // enum BungieMembershipType
-}
-
-/**
- * @namespace DestinyProfile
- * @property {DestinyUser} userInfo - **If you need to render the Profile (their platform name, icon, etc...)
- *     somewhere, this property contains that information.**
- * @property {string} dateLastPlayed - **The last time the user played with any character on this Profile.**
- * @property {number} versionsOwned - **If you want to know what expansions they own, this will contain that data.**
- *
- *     **IMPORTANT:** This field may not return the data you're interested in for Cross-Saved users. It returns the last
- *     ownership data we saw for this account - which is to say, what they've purchased on the platform on which they
- *     last played, which now could be a different platform.
- *
- *     **If you don't care about per-platform ownership and only care about whatever platform it seems they
- *     are playing on most recently, then this should be "good enough." Otherwise, this should be considered
- *     deprecated. We do not have a good alternative to provide at this time with platform specific ownership data
- *     for DLC.**
- *
- * @property {number[]} charactersIds - **A list of the character IDs, for further querying on your part.**
- * @property {number[]} seasonHashes - **A list of hashes for event cards that a profile owns. Unlike most values in
- *     versionsOwned, these stay with the profile across all platforms.**
- * @property {number[]} eventCardHashesOwned - **A list of hashes for event cards that a profile owns. Unlike most
- *     values in versionsOwned, these stay with the profile across all platforms.**
- * @property {number} currentSeasonHash - **If populated, this is a reference to the season that is currently active.**
- * @property {number | null} currentSeasonRewardPowerCap - **If populated, this is the reward power cap for the current
- *     season.**
- * @property {number | null} activeEventCardHash - **The 'current' Guardian Rank value, which starts at rank 1.**
- * @property {number} currentGuardianRank - **The 'current' Guardian Rank value, which starts at rank 1.**
- * @property {number} lifetimeHighestGuardianRank - **The 'lifetime highest' Guardian Rank value, which starts at rank
- *     1.**
- * */
 
 export type DestinyProfile = {
   /**
    * @description If you need to render the Profile (their platform name, icon, etc...) somewhere, this property
    *     contains that information.
    */
-  userInfo: DestinyUser
+  userInfo: UserInfoCard
   /**
    * @description The last time the user played with any character on this Profile.
    * @remarks This says its type date-time on the API docs. Noting here if I run into issues with my type as a string.
@@ -106,15 +52,15 @@ export type DestinyProfile = {
    */
   dateLastPlayed: string
   /**
-   * @description If you want to know what expansions they own, this will contain that data.
+   * @description If you want to know what expansions they own, this will contain that json.
    *
-   * @description IMPORTANT: This field may not return the data you're interested in for Cross-Saved users. It returns
-   *     the last ownership data we saw for this account - which is to say, what they've purchased on the platform on
+   * @description IMPORTANT: This field may not return the json you're interested in for Cross-Saved users. It returns
+   *     the last ownership json we saw for this account - which is to say, what they've purchased on the platform on
    *     which they last played, which now could be a different platform.
    *
    * @description If you don't care about per-platform ownership and only care about whatever platform it seems they
    *     are playing on most recently, then this should be "good enough." Otherwise, this should be considered
-   *     deprecated. We do not have a good alternative to provide at this time with platform specific ownership data
+   *     deprecated. We do not have a good alternative to provide at this time with platform specific ownership json
    *     for DLC.
    */
   versionsOwned: number
@@ -161,29 +107,43 @@ export type DestinyProfile = {
   lifetimeHighestGuardianRank: number
 }
 
-/**
- * @see {@link https://bungie-net.github.io/#/components/schemas/User.UserInfoCard}
- * @namespace DestinyUser
- * @property {string} supplementalDisplayName - **A platform specific additional display name**
- * @property {string} iconPath - **URL the Icon if available.**
- * @property {number} crossSaveOverride - **If there is a cross save override in effect, this value will tell you the
- *    type that is overriding this one.**
- * @property {number[]} applicableMembershipTypes - **The list of Membership Types indicating the platforms on which
- *   this Membership can be used.**
- * @property {boolean} isPublic - **If True, this is a public user membership.**
- * @property {number} membershipType - **The type of the membership. Not necessarily the native type.**
- * @property {string} membershipId - **The Destiny membership ID as they user is known in the Accounts service**
- * @property {string} displayName - **The display name the player has chosen for themselves. The display name is
- *     optional when the data type is used as input to a platform API.**
- * @property {string} bungieGlobalDisplayName - **The bungie global display name, if set.**
- * @property {number} bungieGlobalDisplayNameCode - **The bungie global display name code, if set.**
- */
-
-export type DestinyUser = {
+export type UserMembershipData = {
+  bungieNetUser: GeneralUser
   /**
-   * @description A platform specific additional display name
-   * @example
-   * psn Real Name, bnet Unique Name, etc.
+   * @description this allows you to see destiny memberships that are visible and linked to this account (regardless of whether or not they have characters on the world server)
+   */
+  destinyMemberships: GroupUserInfoCard[]
+  /**
+   * @description If this property is populated, it will have the membership ID of the account considered to be "primary" in this user's cross save relationship.
+   *
+   * If null, this user has no cross save relationship, nor primary account.
+   */
+  primaryMembershipId: string | null
+}
+
+export type UserSearchPrefixRequest = {
+  displayNamePrefix: string
+}
+
+export type UserSearchResponse = {
+  searchResults: UserSearchResponseDetail[]
+  page: number
+  hasMore: boolean
+}
+
+export type UserSearchResponseDetail = {
+  bungieGlobalDisplayName: string
+  bungieGlobalDisplayNameCode: number | null
+  bungieNetMembershipId: number | null
+  destinyMemberships: UserInfoCard[]
+}
+
+/**
+ * @description This contract supplies basic information commonly used to display a minimal amount of information about a user. Take care to not add more properties here unless the property applies in all (or at least the majority) of the situations where UserInfoCard is used. Avoid adding game specific or platform specific details here. In cases where UserInfoCard is a subset of the data needed in a contract, use UserInfoCard as a property of other contracts.
+ */
+export type UserInfoCard = {
+  /**
+   * @description A platform specific additional display name - ex: psn Real Name, bnet Unique Name, etc.
    */
   supplementalDisplayName: string
   /**
@@ -191,15 +151,13 @@ export type DestinyUser = {
    */
   iconPath: string
   /**
-   * @description If there is a cross save override in effect, this value will tell you the type that is overriding
-   *     this one.
+   * @description If there is a cross save override in effect, this value will tell you the type that is overridding this one.
    */
   crossSaveOverride: number
   /**
    * @description The list of Membership Types indicating the platforms on which this Membership can be used.
    *
-   * @description Not in Cross Save = its original membership type. Cross Save Primary = Any membership types it is
-   *     overriding, and its original membership type Cross Save Overridden = Empty list
+   * Not in Cross Save = its original membership type. Cross Save Primary = Any membership types it is overridding, and its original membership type Cross Save Overridden = Empty list
    */
   applicableMembershipTypes: number[]
   /**
@@ -207,16 +165,11 @@ export type DestinyUser = {
    */
   isPublic: boolean
   /**
-   * @description Type of the membership. Not necessarily the native type.
-   **/
+   * @description Membership ID as the user is known in the Accounts service
+   */
   membershipType: number
   /**
-   * @description The membership ID as they user is known in the Accounts service
-   **/
-  membershipId: string
-  /**
-   * @description Display Name the player has chosen for themselves. The display name is optional when the data type
-   *     is used as input to a platform API.
+   * @description Display Name the player has chosen for themselves. The display name is optional when the data type is used as input to a platform API.
    */
   displayName: string
   /**
@@ -229,16 +182,21 @@ export type DestinyUser = {
   bungieGlobalDisplayNameCode: number | null
 }
 
-/**
- * @namespace GetMembershipsForCurrentUserResponse
- * @property {DestinyMembership} destinyMemberships - **this allows you to see destiny memberships that are visible
- *     and linked to this account (regardless of whether they have characters on the world server)**
- */
-
-export type UserMemberships = {
-  bungieNetUser: BungieNetUser
-  destinyMemberships: DestinyMembership[]
-  primaryMembershipId: string
+export type UserToUserContext = {
+  isFollowing: boolean
+  ignoreStatus: { isIgnored: boolean; ignoreFlags: number }
+  globalIgnoreEndDate: string | null
 }
 
-export type GetMembershipsForCurrentUserResponse = BungieResponse<UserMemberships>
+export enum BungieMembershipType {
+  None = 0,
+  TigerXbox = 1,
+  TigerPsn = 2,
+  TigerSteam = 3,
+  TigerBlizzard = 4,
+  TigerStadia = 5,
+  TigerEgs = 6,
+  TigerDemon = 10,
+  BungieNext = 254,
+  All = -1,
+}

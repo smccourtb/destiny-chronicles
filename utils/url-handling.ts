@@ -24,9 +24,8 @@ export const formatQueryParameters = (components: number[]) => {
  * applyBungieDomain("foo/bar") // https://www.bungie.net/foo/bar
  */
 export const applyBungieDomain = (path: string) => {
-  console.log('applyBungieDomain', path)
   // check in path is a string
-  if (!isString(path)) throw TypeError('Path is not a string')
+  if (!isString(path)) return ''
   // check if the path starts with a `/`
   const separator = path.startsWith('/') ? '' : '/'
   // return the path with the domain and separator
