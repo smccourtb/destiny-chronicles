@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { FormattedPerks } from '../../../lib/items'
+import { FormattedPerk } from '../../../lib/items'
 import { RadioGroup } from '@headlessui/react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../Tooltip'
 import Image from 'next/image'
@@ -7,10 +7,10 @@ import { applyBungieDomain } from '../../../utils/url-handling'
 import PerkTooltip from '../../PerkTooltip'
 
 type PerkColumnProps = {
-  perks: FormattedPerks[]
+  perks: FormattedPerk[]
 }
 const PerkColumn = ({ perks }: PerkColumnProps) => {
-  const [activePerk, setActivePerk] = useState<FormattedPerks | null>(null)
+  const [activePerk, setActivePerk] = useState<FormattedPerk | null>(null)
   const perkOptions = perks.map((perk) => {
     return (
       <RadioGroup.Option key={perk.hash} value={perk} className={'rounded-full'}>

@@ -19,7 +19,7 @@ export type DestinyInventoryItemDefinition = {
   crafting: DestinyItemCraftingBlockDefinition
   inventory: DestinyItemInventoryBlockDefinition
   setData: DestinyItemSetBlockDefinition
-  stats: DestinyItemStatBlockDefinition[]
+  stats: DestinyItemStatBlockDefinition
   emblemObjectiveHash: number
   equippingBlock: {
     gearsetItemHash: number

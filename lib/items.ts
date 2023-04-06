@@ -1,5 +1,14 @@
-import { DestinyInventoryItemDefinitionTable, DestinyPlugSetDefinitionTable } from '../database.config'
-import { DestinyDisplayProperties, DestinyInventoryItemDefinition } from '../types'
+import {
+  DestinyInventoryItemDefinitionTable,
+  DestinyPlugSetDefinitionTable,
+  DestinyStatDefinitionTable,
+} from '../database.config'
+import {
+  DestinyDisplayProperties,
+  DestinyInventoryItemDefinition,
+  DestinyItemSocketBlockDefinition,
+  DestinyItemStatBlockDefinition,
+} from '../types'
 
 export type GetWeaponReturn = {
   data: WeaponData | null
@@ -9,12 +18,21 @@ export type GetWeaponReturn = {
 export type WeaponData = {
   hash: number
   displayProperties: DestinyDisplayProperties
-  perks: FormattedPerks[][]
+  perks: FormattedPerk[][]
+  stats: FormattedStat[]
 }
 
-export type FormattedPerks = {
+export type FormattedPerk = {
   displayProperties: DestinyDisplayProperties
   itemTypeDisplayName: string
+  hash: number
+}
+
+export type FormattedStat = {
+  name: string
+  description: string
+  icon: string
+  value: number
   hash: number
 }
 
@@ -27,13 +45,14 @@ export const getWeapon = async (hash: string | number): Promise<GetWeaponReturn>
     const { loreHash, displayProperties, screenshot, flavorText, stats, sockets, hash: weaponHash } = data
 
     const formattedPerks = await getWeaponPerks(sockets)
-    return { data: { displayProperties, perks: formattedPerks, hash: weaponHash }, error: null }
+    const formattedStats = await getWeaponStats(stats)
+    return { data: { displayProperties, perks: formattedPerks, stats: formattedStats, hash: weaponHash }, error: null }
   } catch (err) {
     return { data: null, error: err as Error }
   }
 }
 
-export const getWeaponPerks = async (sockets) => {
+export const getWeaponPerks = async (sockets: DestinyItemSocketBlockDefinition) => {
   const weaponPerksHash = 4241085061
   const perkSocketIndices =
     sockets.socketCategories.find((socket) => socket.socketCategoryHash === weaponPerksHash)?.socketIndexes || []
@@ -62,4 +81,25 @@ export const getWeaponPerks = async (sockets) => {
       return { displayProperties, itemTypeDisplayName, hash }
     })
   })
+}
+
+const getWeaponStats = async (weaponStats: DestinyItemStatBlockDefinition) => {
+  const { stats } = weaponStats
+  const statData = Object.values(stats)
+  const statHashes = statData.map(({ statHash }) => String(statHash))
+
+  const statDefinitions = await DestinyStatDefinitionTable.bulkGet(statHashes)
+  const formattedStats: FormattedStat[] = []
+
+  statDefinitions.forEach((statDefinition, index) => {
+    const { blacklisted, displayProperties, hash } = statDefinition
+    const { name, description, hasIcon } = displayProperties
+    const icon = hasIcon ? displayProperties.icon : ''
+    const { value } = statData[index]
+
+    if (!blacklisted && name) {
+      formattedStats.push({ name, description, icon, value, hash })
+    }
+  })
+  return formattedStats
 }

@@ -1,9 +1,9 @@
 import React from 'react'
-import { FormattedPerks } from '../../../lib/items'
+import { FormattedPerk } from '../../../lib/items'
 import PerkColumn from './PerkColumn'
 
 type WeaponPerkGridProps = {
-  perks: FormattedPerks[][]
+  perks: FormattedPerk[][]
 }
 const WeaponPerkGrid = ({ perks }: WeaponPerkGridProps) => {
   const perkGrid = perks.map((perkColumn) => {
