@@ -12,19 +12,29 @@ type WeaponProps = {
 const Weapon = ({ hash }: WeaponProps) => {
   const { data, error } = useWeapon(hash)
   if (!data || error) {
-    // TODO: implement routing logic
+    // TODO: implement routing logic/error handling
     return null
   }
   const { displayProperties, perks, stats } = data
   console.log('weapon data in weapon component: ', data)
 
   return (
-    <>
-      <h1>{displayProperties.name}</h1>
-      <Image src={applyBungieDomain(displayProperties.icon)} width={48} height={48} alt={`${displayProperties.name}`} />
-      <WeaponPerkGrid perks={perks} />
-      <WeaponStats stats={stats} />
-    </>
+    <main className="grid grid-cols-12">
+      <div className="col-span-4 flex flex-col gap-2">
+        <h1 className="2">{displayProperties.name}</h1>
+        <Image
+          src={applyBungieDomain(displayProperties.icon)}
+          width={48}
+          height={48}
+          priority
+          alt={`${displayProperties.name}`}
+        />
+        <WeaponStats stats={stats} />
+      </div>
+      <div className="col-span-8 row-auto col-start-5">
+        <WeaponPerkGrid perks={perks} />
+      </div>
+    </main>
   )
 }
 

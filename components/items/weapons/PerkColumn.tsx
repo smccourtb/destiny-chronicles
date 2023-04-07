@@ -41,7 +41,7 @@ const PerkColumn = ({ perks }: PerkColumnProps) => {
     )
   })
   return (
-    <RadioGroup value={activePerk} onChange={setActivePerk} className="flex flex-col gap-2">
+    <RadioGroup value={activePerk} onChange={setActivePerk} className="flex flex-col gap-2 items-center">
       <RadioGroup.Label className="sr-only">{perks[0].itemTypeDisplayName}</RadioGroup.Label>
       {perkOptions}
     </RadioGroup>

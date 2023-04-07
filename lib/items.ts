@@ -8,6 +8,7 @@ import {
   DestinyInventoryItemDefinition,
   DestinyItemSocketBlockDefinition,
   DestinyItemStatBlockDefinition,
+  DestinyStatDefinition,
 } from '../types'
 
 export type GetWeaponReturn = {
@@ -88,16 +89,19 @@ const getWeaponStats = async (weaponStats: DestinyItemStatBlockDefinition) => {
   const statData = Object.values(stats)
   const statHashes = statData.map(({ statHash }) => String(statHash))
 
-  const statDefinitions = await DestinyStatDefinitionTable.bulkGet(statHashes)
+  const statDefinitions: DestinyStatDefinition[] = await DestinyStatDefinitionTable.bulkGet(statHashes)
   const formattedStats: FormattedStat[] = []
 
   statDefinitions.forEach((statDefinition, index) => {
-    const { blacklisted, displayProperties, hash } = statDefinition
+    const { blacklisted, displayProperties, statCategory, hash } = statDefinition
+
+    // I may want to pull the redacted property out at some point. Noting here for now.
     const { name, description, hasIcon } = displayProperties
     const icon = hasIcon ? displayProperties.icon : ''
     const { value } = statData[index]
 
-    if (!blacklisted && name) {
+    // statCategory === 1 is for weapon stats.
+    if (!blacklisted && name && statCategory === 1) {
       formattedStats.push({ name, description, icon, value, hash })
     }
   })

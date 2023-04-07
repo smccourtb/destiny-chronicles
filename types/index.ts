@@ -329,8 +329,19 @@ export type DestinyItemStatBlockDefinition = {
   primaryBaseStatHash: number
 }
 
+export type DestinyStatDefinition = {
+  displayProperties: DestinyDisplayProperties
+  aggregationType: number
+  hasComputedBlock: boolean
+  statCategory: number
+  hash: number
+  index: number
+  redacted: boolean
+  blacklisted: boolean
+}
+
 export type DestinyInventoryItemStatDefinition = {
-  statHash: number
+  statHash: number // DestinyStatDefinition
   value: number
   minimum: number
   maximum: number
