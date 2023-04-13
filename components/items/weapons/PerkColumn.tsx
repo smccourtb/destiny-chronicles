@@ -1,16 +1,16 @@
 import React, { useState } from 'react'
-import { FormattedPerks } from '../../../lib/items'
+import { FormattedPerk } from '../../../lib/items'
 import { RadioGroup } from '@headlessui/react'
-import { Tooltip, TooltipContent, TooltipTrigger } from '../../Tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../tooltips/Tooltip'
 import Image from 'next/image'
 import { applyBungieDomain } from '../../../utils/url-handling'
-import PerkTooltip from '../../PerkTooltip'
+import PerkTooltip from '../../tooltips/PerkTooltip'
 
 type PerkColumnProps = {
-  perks: FormattedPerks[]
+  perks: FormattedPerk[]
 }
 const PerkColumn = ({ perks }: PerkColumnProps) => {
-  const [activePerk, setActivePerk] = useState<FormattedPerks | null>(null)
+  const [activePerk, setActivePerk] = useState<FormattedPerk | null>(null)
   const perkOptions = perks.map((perk) => {
     return (
       <RadioGroup.Option key={perk.hash} value={perk} className={'rounded-full'}>
@@ -41,7 +41,7 @@ const PerkColumn = ({ perks }: PerkColumnProps) => {
     )
   })
   return (
-    <RadioGroup value={activePerk} onChange={setActivePerk} className="flex flex-col gap-2">
+    <RadioGroup value={activePerk} onChange={setActivePerk} className="flex flex-col gap-2 items-center">
       <RadioGroup.Label className="sr-only">{perks[0].itemTypeDisplayName}</RadioGroup.Label>
       {perkOptions}
     </RadioGroup>

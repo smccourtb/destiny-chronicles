@@ -15,6 +15,7 @@ module.exports = {
         highlight: '#ffce1f',
         white: '#f5f5f5',
         'modifier-blue': '#5b94be',
+        legendary: '#522d65',
       },
       keyframes: {
         'slide-from-left': {
