@@ -2,7 +2,7 @@ import React from 'react'
 import Image from 'next/image'
 import { applyBungieDomain } from '../utils/url-handling'
 import { FormattedMilestone } from '../lib/milestones'
-import { Tooltip, TooltipContent, TooltipTrigger } from './Tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger } from './tooltips/Tooltip'
 
 type WeeklyCardProps = {
   activity: FormattedMilestone
