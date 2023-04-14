@@ -39,8 +39,8 @@ const WeaponStats = ({ stats }: WeaponStatsProps) => {
       ))}
       <div className="grid grid-cols-[33%_minmax(33%,_1fr)] gap-2 items-center text-xl font-bold w-full">
         {otherStats.map((stat) => (
-          <>
-            <Tooltip key={stat.hash}>
+          <React.Fragment key={stat.hash}>
+            <Tooltip>
               <TooltipTrigger asChild={true}>
                 <p key={stat.hash} className="font-light text-md text-right truncate">
                   {stat.name}:
@@ -51,7 +51,7 @@ const WeaponStats = ({ stats }: WeaponStatsProps) => {
               </TooltipContent>
             </Tooltip>
             <p className="font-semibold">{stat.value}</p>
-          </>
+          </React.Fragment>
         ))}
       </div>
     </div>
