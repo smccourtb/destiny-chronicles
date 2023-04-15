@@ -120,6 +120,9 @@ export const handleWeaponMasterwork = async (data: DestinyItemSocketEntryDefinit
   if (data.length === 0) return null
   const masterworkHash = 2218962841
   const masterworkSocketEntry = data.find((socket) => socket.socketTypeHash === masterworkHash)
+  console.log('masterworkSocketEntry', masterworkSocketEntry)
+  const emptyMasterworkSocketHash = 236077174
+
   if (!masterworkSocketEntry) return null
   const masterworkHashMap = {
     stability: 384158423, // all weapons -> not glaives?
@@ -172,26 +175,34 @@ export const handleWeaponMasterwork = async (data: DestinyItemSocketEntryDefinit
     .filter((plug) => weaponModHashes.includes(plug.plugItemHash))
     .map((plug) => plug.plugItemHash.toString())
 
-  const rawMasterworkData: DestinyInventoryItemDefinition[] = await DestinyInventoryItemDefinitionTable.bulkGet(
-    masterworkSocketHashes
-  )
+  const rawMasterworkData: DestinyInventoryItemDefinition[] = await DestinyInventoryItemDefinitionTable.bulkGet([
+    ...masterworkSocketHashes,
+    emptyMasterworkSocketHash.toString(),
+  ])
 
   return await Promise.all(
     rawMasterworkData.map(async (masterwork) => {
-      const { iconWatermark, investmentStats } = masterwork
-      const basicData = formatBasicDisplayData(masterwork)
-      const watermark = applyBungieDomain(iconWatermark)
+      console.log('masterwork', masterwork)
 
-      const statHash = investmentStats.find((stat) => !stat.isConditionallyActive)?.statTypeHash
-      if (!statHash) return null
+      const { iconWatermark, investmentStats, displayProperties, hash } = masterwork
+      const { description } = displayProperties
+      const icon = handleIcon(displayProperties)
+      const watermark = applyBungieDomain(iconWatermark)
+      if (masterwork.hash === emptyMasterworkSocketHash) {
+        const name = 'Empty Masterwork Socket'
+        return { name, description, icon, iconWatermark: watermark, hash }
+      }
+      const statHash = investmentStats.find((stat) => !stat.isConditionallyActive)!.statTypeHash
       const stat = await DestinyStatDefinitionTable.get(statHash.toString())
       const { displayProperties: statDisplayProperties } = stat
       const { name: statName, description: statDescription } = statDisplayProperties
 
       return {
-        ...basicData,
         iconWatermark: watermark,
-        associatedStat: { name: statName, description: statDescription },
+        name: statName,
+        description: statDescription,
+        icon,
+        hash,
       }
     })
   )
