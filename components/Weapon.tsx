@@ -4,6 +4,7 @@ import Image from 'next/image'
 import WeaponPerkGrid from './items/weapons/WeaponPerkGrid'
 import WeaponStats from './items/weapons/WeaponStats'
 import WeaponMods from './items/weapons/WeaponMods'
+import WeaponMasterwork from './items/weapons/WeaponMasterwork'
 
 type WeaponProps = {
   hash: string | number
@@ -17,7 +18,21 @@ const Weapon = ({ hash }: WeaponProps) => {
   }
   console.log('data', data)
 
-  const { name, icon, flavorText, type, rarity, ammoType, damageType, screenshot, perks, stats, deepsight, mods } = data
+  const {
+    name,
+    icon,
+    flavorText,
+    type,
+    rarity,
+    ammoType,
+    damageType,
+    screenshot,
+    perks,
+    stats,
+    deepsight,
+    mods,
+    masterwork,
+  } = data
   return (
     <main className="grid grid-cols-3">
       <div className="col-span-1 flex flex-col gap-8">
@@ -74,7 +89,8 @@ const Weapon = ({ hash }: WeaponProps) => {
       </div>
       <div className="col-span-2 flex flex-col">
         <WeaponPerkGrid perks={perks} />
-        {mods && <WeaponMods mods={mods} />}
+        <WeaponMods mods={mods} />
+        {masterwork && <WeaponMasterwork masterworks={masterwork} />}
       </div>
     </main>
   )

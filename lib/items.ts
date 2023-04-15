@@ -27,9 +27,9 @@ export type WeaponData = {
   flavorText: string | null
   perks: FormattedPerk[][]
   stats: FormattedStat[]
-  mods: FormattedMod[] | null
+  mods: FormattedMod[]
   deepsight: any | null
-  masterwork: any[] | null
+  masterwork: FormattedMasterworks[] | null
   catalyst: FormattedDisplay[] | null
   intrinsic: FormattedDisplay | null
   lore: FormattedLore | null
@@ -66,6 +66,10 @@ export interface FormattedStat extends FormattedDisplay {
 
 export interface FormattedMod extends FormattedDisplay {
   itemTypeDisplayName: string
+}
+
+export interface FormattedMasterworks extends FormattedDisplay {
+  iconWatermark: string
 }
 
 export const getWeapon = async (hash: string | number): Promise<GetWeaponReturn> => {
