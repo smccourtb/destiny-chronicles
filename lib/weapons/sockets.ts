@@ -4,6 +4,7 @@ import {
   DestinyItemSocketBlockDefinition,
   DestinyItemSocketEntryDefinition,
   DestinyPlugSetDefinition,
+  DestinyStatDefinition,
 } from '../../types'
 import {
   DestinyInventoryItemDefinitionTable,
@@ -22,29 +23,43 @@ export const formatBasicDisplayData = (data: { displayProperties: DestinyDisplay
 }
 export const handleWeaponPerks = async (socketCategoryHash: number, sockets: DestinyItemSocketBlockDefinition) => {
   const perkSockets = getSocketEntriesFromCategory(socketCategoryHash, sockets)
-  const rawPerkData = []
-  for (const socket of perkSockets) {
-    if (!socket.singleInitialItemHash) continue
-    const hasRandomPerks = socket?.randomizedPlugSetHash
-    if (hasRandomPerks) {
-      const randomPerks: DestinyPlugSetDefinition = await DestinyPlugSetDefinitionTable.get(
-        socket.randomizedPlugSetHash.toString()
-      )
-      const perkHashes = randomPerks.reusablePlugItems.map((perk) => perk.plugItemHash.toString())
-      const perksByColumn = await DestinyInventoryItemDefinitionTable.bulkGet(perkHashes)
-      rawPerkData.push(perksByColumn)
-    } else {
-      const perkData = await DestinyInventoryItemDefinitionTable.get(socket.singleInitialItemHash.toString())
-      rawPerkData.push([perkData])
-    }
-  }
-
-  return rawPerkData.map((perkData) => {
-    return perkData.map((perk) => {
-      const { displayProperties, itemTypeDisplayName, hash } = perk
-      return { displayProperties, itemTypeDisplayName, hash }
+  const rawPerkData: DestinyInventoryItemDefinition[][] = await Promise.all(
+    perkSockets.map(async (socket) => {
+      if (!socket.singleInitialItemHash) return []
+      const hasRandomPerks = socket?.randomizedPlugSetHash
+      if (hasRandomPerks) {
+        const randomPerks: DestinyPlugSetDefinition = await DestinyPlugSetDefinitionTable.get(
+          socket.randomizedPlugSetHash.toString()
+        )
+        const perkHashes = randomPerks.reusablePlugItems.map((perk) => perk.plugItemHash.toString())
+        return DestinyInventoryItemDefinitionTable.bulkGet(perkHashes)
+      } else {
+        const perkData = await DestinyInventoryItemDefinitionTable.get(socket.singleInitialItemHash.toString())
+        return [perkData]
+      }
     })
-  })
+  )
+
+  return Promise.all(
+    rawPerkData.map(async (perkData) => {
+      return Promise.all(
+        perkData.map(async (perk) => {
+          const { displayProperties, itemTypeDisplayName, investmentStats, hash } = perk
+          const statModifiers = await Promise.all(
+            investmentStats?.map(async (stat) => {
+              const statDef: DestinyStatDefinition = await DestinyStatDefinitionTable.get(stat.statTypeHash.toString())
+              const { displayProperties } = statDef
+              const { name } = displayProperties
+              const { value } = stat
+              return { name, value }
+            })
+          )
+
+          return { displayProperties, itemTypeDisplayName, hash, statModifiers }
+        })
+      )
+    })
+  )
 }
 
 export const handleModSockets = async (
@@ -207,9 +222,23 @@ export const handleWeaponMasterwork = async (data: DestinyItemSocketEntryDefinit
     })
   )
 }
-const getSocketEntriesFromCategory = (hash: number, sockets: DestinyItemSocketBlockDefinition) => {
-  const socketIndices =
+
+/**
+ * Returns an array of socket entries from the given category hash and socket block definition.
+ * @param hash - The hash value of the socket category to filter by.
+ * @param sockets - The socket block definition to search.
+ * @returns An array of socket entries that belong to the given category hash.
+ */
+const getSocketEntriesFromCategory = (
+  hash: number,
+  sockets: DestinyItemSocketBlockDefinition
+): DestinyItemSocketEntryDefinition[] => {
+  // Find the socket category that matches the given hash and get its socket indices,
+  // or use an empty array if no category is found.
+  const socketIndices: number[] =
     sockets.socketCategories.find((socket) => socket.socketCategoryHash === hash)?.socketIndexes || []
+
+  // Map the socket indices to their corresponding socket entries.
   return socketIndices.map((socketIndex: number) => {
     return sockets.socketEntries[socketIndex]
   })
